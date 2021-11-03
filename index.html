@@ -4,19 +4,110 @@
     </head>
     <body>
 
-        <select>
-            <option>Raza 1</option>
-            <option>Raza 2</option>
-            <option>Raza 3</option>
+        <select id="species-select">
+            <option disabled selected value> -- select an option -- </option>
+            <option value="dogs">Dogs</option>
+            <option value="cats">Cats</option>
         </select>
+
+        <select id="breed-select">
+        </select>
+
+        <button id="show-random-image">Show image</button>
+
+        <img id="pet-image" src="" height="200" />
 
         <script>
 
-            fetch("https://dog.ceo/api/breeds/list/all")
-                .then(response => response.json())
-                .then(data => {
-                    console.log(Object.keys(data["message"]));
-                });
+            document.getElementById("species-select").addEventListener("change", () => {
+
+                let species = document.getElementById("species-select").value;
+
+                if (species === "dogs") {
+                    listBreeds("https://dog.ceo/api/breeds/list/all", (data) => {
+                        // Extract breeds in array
+                        let breeds = Object.keys(data["message"]);
+
+                        // Use DOM API to reference select element
+                        let breedSelect = document.getElementById("breed-select");
+                        breedSelect.innerHTML = "";
+                        
+                        // Loop through breeds and add an option to the select element
+                        breeds.map(breed => {
+                            let option = document.createElement("option");
+                            option.value = breed;
+                            option.innerText = breed;
+                            breedSelect.appendChild(option);
+                        });
+                    });
+                } else {
+                    listBreeds("https://api.thecatapi.com/v1/breeds", (data) => {
+
+                        console.log(data);
+
+                        // Use DOM API to reference select element
+                        let breedSelect = document.getElementById("breed-select");
+                        breedSelect.innerHTML = "";
+                        
+                        // Loop through breeds and add an option to the select element
+                        data.map(breed => {
+                            let option = document.createElement("option");
+                            option.value = breed.id;
+                            option.innerText = breed.name;
+                            breedSelect.appendChild(option);
+                        });
+
+                    });
+                }
+
+            });
+
+            function listBreeds(url, populateSelect) {
+
+                // Use Fetch API to get the breed list
+                fetch(url)
+                    .then(response => response.json())
+                    .then(data => {
+                        populateSelect(data);
+                    });
+
+            }
+            
+            document.getElementById("show-random-image").addEventListener("click", ()=> {
+
+                let species = document.getElementById("species-select").value;
+
+                // Get the selected breed
+                let breed = document.getElementById("breed-select").value;
+
+                if (species === "dogs") {
+                    // Use Fetch API to get a random image
+                    fetch(`https://dog.ceo/api/breed/${breed}/images/random`)
+                        .then(response => response.json())
+                        .then(data => {
+                            
+                            // Use DOM API to reference image element
+                            let petImage = document.getElementById("pet-image");
+                            petImage.src = data["message"];
+
+                        });
+                } else {
+
+                    fetch(`https://api.thecatapi.com/v1/images/search?breed_ids=${breed}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            
+                            // Use DOM API to reference image element
+                            let petImage = document.getElementById("pet-image");
+                            petImage.src = data[0].url;
+
+                        });
+
+                }
+
+
+                
+            });
 
         </script>
     </body>
